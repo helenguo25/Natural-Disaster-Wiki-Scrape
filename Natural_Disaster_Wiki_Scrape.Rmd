@@ -1,0 +1,85 @@
+---
+title: "Natural Disaster Wiki Scrape"
+output: html_document
+author: Helen Guo
+date: "2023-08-21"
+---
+
+## SETUP
+```{r setup, include=TRUE, results='hide', message=FALSE}
+# Clear workspace
+rm(list=ls())
+
+# Load required libraries 
+library(tidyverse)
+library(lubridate)
+library(janitor)
+library(rvest)
+library(httr)
+library(polite)
+library(data.table)
+library(ggplot2)
+library(scales)
+library(plotly)
+
+# Set working directory 
+# setwd("/Users/helenguo/Documents")
+```
+
+## WEB SCRAPE AND CLEAN
+```{r, include=TRUE, results='hide', message=FALSE}
+# Reference the Wikipedia page of natural disasters by death toll
+url <- "https://en.wikipedia.org/wiki/List_of_natural_disasters_by_death_toll"
+
+# Read HTML code from the page
+url_bow <- polite::bow(url)
+
+# Scrape tables from all sections
+ind_html <-
+  polite::scrape(url_bow) %>%  # Scrape web page
+  rvest::html_nodes("table.wikitable") %>% # Pull out wiki tables
+  rvest::html_table(fill = TRUE)
+
+# Extract tables 2 and 3 (20th and 21st century all cause disasters)
+century_20_disasters <- data.frame(ind_html[2])
+century_21_disasters <- data.frame(ind_html[3])
+
+# Merge 20th and 21st century data frames together
+century_20_21_disasters <- rbind(century_20_disasters, century_21_disasters)
+
+# Select relevant columns - year, death toll, and event type
+final_variables <- century_20_21_disasters[,c("Year", "Death.toll","Type")]
+
+# Functions to clean death toll strings 
+convert_death_toll <- function(Death.toll) {
+  # Remove commas and plus signs from the string
+  cleaned_string_toll_1 <- gsub("[,\\+]", "", Death.toll)
+  # Remove Wikipedia references in brackets from the string
+  cleaned_string_toll_2 <- gsub("\\[.*?\\]", "", cleaned_string_toll_1)
+}
+
+# Apply the cleaning function to the death toll values
+converted_death_toll <- data.frame(sapply(final_variables, convert_death_toll))
+
+# Convert the death toll to numbers using the midpoints when a range is given and the bound when an upper or lower bound is given (example 20,000+ converts to 20000)
+converted_death_toll$Death.toll <- sapply(strsplit(converted_death_toll$Death.toll, split = "–"),
+                        function(x) mean(as.numeric(x)/1000))
+```
+
+## CREATE PLOT
+```{r plot-wider, fig.width=40, fig.height=10, message=FALSE}
+# Plot the death toll (vertical / y axis) by year (horizontal / x axis) color coded by type of disaster
+plot <- ggplot(converted_death_toll, aes(x = Year, y = Death.toll, color = Type)) +
+  geom_point() +
+  geom_line() +
+  labs(x = "Year", y = "Death Toll (Thousands)", color = "Type of Disaster") +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2))  +
+  ggtitle("Death Toll by Year and Type of Disaster") +
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 30, hjust = 0.5, vjust = 0.5)) 
+
+# Transform plot into visible (longer) interactive version using ggplotly
+# Scroll right to view entirety of plot
+p <- ggplotly(plot)
+p
+
+```
