@@ -1,6 +1,6 @@
 # Natural-Disaster-Wiki-Scrape
 
-This project uses R to web scrape the following Wikipedia page on natural disasters (https://en.wikipedia.org/wiki/List_of_natural_disasters_by_death_toll) and create an interactive plot for death toll for the deadliest natural disasters in each year during the 20th and 21st centuries, color-coded by type of disaster.
+This project (https://github.com/helenguo25/Natural-Disaster-Wiki-Scrape) uses R to web scrape the following Wikipedia page on natural disasters (https://en.wikipedia.org/wiki/List_of_natural_disasters_by_death_toll) and create an interactive plot for death toll for the deadliest natural disasters in each year during the 20th and 21st centuries, color-coded by type of disaster.
 
 Download Natural_Disaster_Wiki_Scrape.html to view the interactive plot and R code used to scrape the Wikipedia tables/create the plot. Alternatively, to recreate the html file locally, download Natural_Disaster_Wiki_Scrape.Rmd and change the working directory to your local file before running/marking down.
    
